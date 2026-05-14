@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.26.0](https://github.com/linhnguyen-gt/Routiform/compare/v3.25.3...v3.26.0) (2026-05-14)
+
+
+### Features
+
+* **opencode:** add limit.output to opencode model config ([a218418](https://github.com/linhnguyen-gt/Routiform/commit/a21841817bbd6e76d18e5dc1c11f0721f6e70332))
+
+
+### Bug Fixes
+
+* **opencode:** always include limit.output when limit.context is set ([30f713a](https://github.com/linhnguyen-gt/Routiform/commit/30f713a22de8668cccf91ab0f1f4ec3e5fb9d2f9))
+
 ### [3.25.3](https://github.com/linhnguyen-gt/Routiform/compare/v3.25.2...v3.25.3) (2026-05-14)
 
 
