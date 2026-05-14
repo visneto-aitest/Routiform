@@ -27,6 +27,9 @@ export function toOpenCodeModelRef(model: string | undefined | null): string | u
   return `${OPENCODE_PROVIDER_KEY}/${v}`;
 }
 
+// opencode requires limit.output when limit.context is set (validated since v1.14.50)
+const DEFAULT_OUTPUT_TOKENS = 16384;
+
 export const buildOpenCodeProviderConfig = ({
   baseUrl,
   apiKey,
@@ -47,18 +50,17 @@ export const buildOpenCodeProviderConfig = ({
 
   const modelsRecord: Record<
     string,
-    { name: string; limit?: { context: number; output?: number } }
+    { name: string; limit?: { context: number; output: number } }
   > = {};
   for (const m of uniqueModels) {
     if (m) {
       const contextLength = modelContextLengths?.[m];
-      const maxOutput = modelMaxOutputTokens?.[m];
-      const limit = contextLength
-        ? { context: contextLength, ...(maxOutput ? { output: maxOutput } : {}) }
-        : undefined;
+      const maxOutput = modelMaxOutputTokens?.[m] || DEFAULT_OUTPUT_TOKENS;
       modelsRecord[m] = {
         name: m,
-        ...(limit ? { limit } : {}),
+        // Always include both context and output when context is available —
+        // opencode v1.14.50+ requires output when context is set.
+        ...(contextLength ? { limit: { context: contextLength, output: maxOutput } } : {}),
       };
     }
   }
