@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.27.1](https://github.com/linhnguyen-gt/Routiform/compare/v3.27.0...v3.27.1) (2026-05-15)
+
+
+### Bug Fixes
+
+* **executor:** sanitize reasoning_effort per provider capability ([9d4634c](https://github.com/linhnguyen-gt/Routiform/commit/9d4634cdd1b850565e5818620b8adba1d6b62b96))
+* **reasoning:** add deepseek-v4 to replay model patterns ([d29ca3d](https://github.com/linhnguyen-gt/Routiform/commit/d29ca3d5341bbee1d9e1568c59fe037819a148dd))
+* **translator:** coerce submit_pr_review array fields ([85bbe2d](https://github.com/linhnguyen-gt/Routiform/commit/85bbe2d2a5257c6c5a905c4e318d30ec27a7f647))
+* **translator:** emit reasoning_content for redacted_thinking blocks ([627a43a](https://github.com/linhnguyen-gt/Routiform/commit/627a43a604b3fc39fc290e49bf2395b7ad52ceee))
+* **translator:** preserve include array and degrade background:true in Responses API ([f647033](https://github.com/linhnguyen-gt/Routiform/commit/f647033c0d02fe1572fec73c685812d13b5dc687))
+* **translator:** preserve latest assistant thinking blocks verbatim ([0e00ed7](https://github.com/linhnguyen-gt/Routiform/commit/0e00ed70c763521f54c23818c6cf289b2b330f6a))
+
 ## [3.27.0](https://github.com/linhnguyen-gt/Routiform/compare/v3.26.0...v3.27.0) (2026-05-15)
 
 
