@@ -183,6 +183,7 @@ const KNOWN_SVGS = new Set([
   "cartesia",
   "cloudflare-ai",
   "comfyui",
+  "commandcode",
   "deepinfra",
   "elevenlabs",
   "exa-search",

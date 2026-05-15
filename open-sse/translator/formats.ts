@@ -10,4 +10,5 @@ export const FORMATS = {
   ANTIGRAVITY: "antigravity",
   KIRO: "kiro",
   CURSOR: "cursor",
+  COMMANDCODE: "commandcode",
 };

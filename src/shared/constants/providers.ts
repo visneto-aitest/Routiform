@@ -108,6 +108,15 @@ export const APIKEY_PROVIDERS = {
     website: "https://openrouter.ai",
     // No passthroughModels — ModelSelectModal uses registry (empty list) + aliases + catalog, aligned with 9router.
   },
+  commandcode: {
+    id: "commandcode",
+    alias: "cc2",
+    name: "CommandCode",
+    icon: "terminal",
+    color: "#6366F1",
+    textIcon: "CC",
+    website: "https://commandcode.ai",
+  },
   glm: {
     id: "glm",
     alias: "glm",

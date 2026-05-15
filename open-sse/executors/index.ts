@@ -15,6 +15,7 @@ import { CliproxyapiExecutor } from "./cliproxyapi.ts";
 import { QwenExecutor } from "./qwen.ts";
 import { GrokWebExecutor } from "./grok-web.ts";
 import { PerplexityWebExecutor } from "./perplexity-web.ts";
+import { CommandCodeExecutor } from "./commandcode.ts";
 
 const executors = {
   antigravity: new AntigravityExecutor(),
@@ -39,6 +40,7 @@ const executors = {
   qwen: new QwenExecutor(),
   "grok-web": new GrokWebExecutor(),
   "perplexity-web": new PerplexityWebExecutor(),
+  commandcode: new CommandCodeExecutor(),
 };
 
 const defaultCache = new Map();
@@ -71,3 +73,4 @@ export { VertexExecutor } from "./vertex.ts";
 export { QwenExecutor } from "./qwen.ts";
 export { GrokWebExecutor } from "./grok-web.ts";
 export { PerplexityWebExecutor } from "./perplexity-web.ts";
+export { CommandCodeExecutor } from "./commandcode.ts";
