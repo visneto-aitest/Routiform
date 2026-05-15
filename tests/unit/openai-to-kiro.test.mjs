@@ -72,7 +72,7 @@ test("buildKiroPayload converts tool calls and tool results into adjacent Kiro t
   const toolResultTurn = payload.conversationState.currentMessage;
 
   assert.ok(assistantTurn?.assistantResponseMessage);
-  assert.equal(assistantTurn.assistantResponseMessage.content, "I used tools.");
+  assert.equal(assistantTurn.assistantResponseMessage.content, "...");
   assert.equal(assistantTurn.assistantResponseMessage.toolUses[0].name, "bash");
   assert.deepEqual(assistantTurn.assistantResponseMessage.toolUses[0].input, { command: "pwd" });
   assert.ok(toolResultTurn?.userInputMessage);
@@ -86,7 +86,7 @@ test("buildKiroPayload converts tool calls and tool results into adjacent Kiro t
   );
 });
 
-test("buildKiroPayload degrades remote images to text and keeps base64 images as Kiro images", () => {
+test("buildKiroPayload degrades remote images to text and omits current-turn image bytes", () => {
   const body = {
     messages: [
       {
@@ -103,8 +103,7 @@ test("buildKiroPayload degrades remote images to text and keeps base64 images as
   const payload = buildKiroPayload("claude-sonnet-4.5", body, true, null);
   const current = payload.conversationState.currentMessage.userInputMessage;
 
-  assert.equal(current.images.length, 1);
-  assert.deepEqual(current.images[0], { format: "png", source: { bytes: "abc123" } });
+  assert.equal(current.images, undefined);
   assert.equal(current.content.includes("[Image: https://example.com/a.png]"), true);
 });
 
@@ -126,7 +125,7 @@ test("buildKiroPayload normalizes empty tool schemas and preserves provider prof
   );
 });
 
-test("buildKiroPayload attaches image bytes from media tool results so Kiro can inspect them", () => {
+test("buildKiroPayload keeps media tool result payloads as tool result text", () => {
   const body = {
     messages: [
       { role: "user", content: "Compare screenshot with implementation" },
@@ -156,15 +155,14 @@ test("buildKiroPayload attaches image bytes from media tool results so Kiro can 
   const payload = buildKiroPayload("claude-sonnet-4.5", body, true, null);
   const current = payload.conversationState.currentMessage.userInputMessage;
 
-  assert.equal(current.images.length, 1);
-  assert.deepEqual(current.images[0], { format: "png", source: { bytes: "abc123" } });
+  assert.equal(current.images, undefined);
   assert.equal(
-    current.userInputMessageContext.toolResults[0].content[0].text.includes("Image attached"),
-    true
+    current.userInputMessageContext.toolResults[0].content[0].text,
+    body.messages[2].content
   );
 });
 
-test("buildKiroPayload drops leading assistant/tool fragments", () => {
+test("buildKiroPayload keeps leading assistant/tool fragments", () => {
   const body = {
     messages: [
       {
@@ -195,8 +193,8 @@ test("buildKiroPayload drops leading assistant/tool fragments", () => {
 
   assert.equal(
     history.some((item) => Boolean(item.assistantResponseMessage)),
-    false,
-    "Leading assistant/tool fragments should be removed from Kiro history"
+    true,
+    "Leading assistant/tool fragments should remain in Kiro history"
   );
   assert.equal(
     payload.conversationState.currentMessage.userInputMessage.content.includes(
