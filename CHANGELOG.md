@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.29.1](https://github.com/linhnguyen-gt/Routiform/compare/v3.29.0...v3.29.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* **devin:** bundle Linux CLI in Docker and resolve executable path ([e7a4f57](https://github.com/linhnguyen-gt/Routiform/commit/e7a4f57ab30b17b77c82ad4c9be1ca49e345f28c))
+* **provider:** align Antigravity Gemini model IDs ([fcff039](https://github.com/linhnguyen-gt/Routiform/commit/fcff03959397a32be97fc7b93aaf980f238c8c85))
+
 ## [3.29.0](https://github.com/linhnguyen-gt/Routiform/compare/v3.28.0...v3.29.0) (2026-05-20)
 
 
