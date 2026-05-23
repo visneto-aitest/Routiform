@@ -339,7 +339,7 @@ export const OAUTH_PROVIDERS: Record<string, RegistryEntry> = {
   devin: {
     id: "devin",
     alias: "dv",
-    format: "openai",
+    format: "devin",
     executor: "devin",
     // DevinExecutor spawns `devin --print` subprocess — no HTTP endpoint needed.
     baseUrl: "devin://subprocess",
