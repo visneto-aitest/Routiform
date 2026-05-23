@@ -15,6 +15,7 @@ const {
   getDefaultThinkingBudget,
   capThinkingBudget,
 } = await import("../../src/shared/constants/modelSpecs.ts");
+const { getTokenLimit } = await import("../../open-sse/services/context-manager/token-limits.ts");
 
 test("T31: antigravity static catalog exposes the current Gemini and Pro model IDs", () => {
   // Antigravity uses a static catalog because its Cloud Code model list does not come
@@ -68,4 +69,18 @@ test("T38: modelSpecs exposes centralized helpers with alias and prefix lookup",
   assert.equal(resolveModelAlias("gemini-3.1-pro-preview-customtools"), "gemini-3.1-pro-high");
   assert.equal(getDefaultThinkingBudget("gemini-3.1-pro-high"), 24576);
   assert.equal(capThinkingBudget("gemini-3.1-pro-low", 50000), 16000);
+});
+
+test("T38: GPT-5 family uses the 400k / 128k OpenAI limits", () => {
+  const gpt54 = getModelSpec("gpt-5.4");
+  const gpt5Codex = getModelSpec("gpt-5.3-codex");
+  const gpt5Mini = getModelSpec("gpt-5-mini");
+
+  assert.equal(gpt54.contextWindow, 400000);
+  assert.equal(gpt54.maxOutputTokens, 128000);
+  assert.equal(gpt5Codex.contextWindow, 400000);
+  assert.equal(gpt5Codex.maxOutputTokens, 128000);
+  assert.equal(gpt5Mini.contextWindow, 400000);
+  assert.equal(gpt5Mini.maxOutputTokens, 128000);
+  assert.equal(getTokenLimit("openai", "gpt-5"), 400000);
 });

@@ -115,6 +115,7 @@ export const OAUTH_PROVIDERS: Record<string, RegistryEntry> = {
     authType: "oauth",
     authHeader: "bearer",
     defaultContextLength: 400000,
+    defaultMaxOutputTokens: 128000,
     headers: getCodexDefaultHeaders(),
     oauth: {
       clientIdEnv: "CODEX_OAUTH_CLIENT_ID",
