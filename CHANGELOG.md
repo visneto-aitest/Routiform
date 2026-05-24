@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.30.1](https://github.com/linhnguyen-gt/Routiform/compare/v3.30.0...v3.30.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* **cli-tools:** repair codex configuration flow ([0c40037](https://github.com/linhnguyen-gt/Routiform/commit/0c40037b8bf86cc40947dcd45ae0b0903c6244e8))
+
 ## [3.30.0](https://github.com/linhnguyen-gt/Routiform/compare/v3.29.2...v3.30.0) (2026-05-24)
 
 
