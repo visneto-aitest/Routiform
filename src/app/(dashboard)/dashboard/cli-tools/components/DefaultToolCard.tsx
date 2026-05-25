@@ -5,6 +5,7 @@ import { Card, Button, ModelSelectModal } from "@/shared/components";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { copyToClipboard } from "@/shared/utils/clipboard";
+import { mergeOpenCodeConfig } from "@/shared/services/opencodeConfig";
 
 function parseModelList(value) {
   return Array.from(
@@ -80,7 +81,22 @@ export default function DefaultToolCard({
       ? normalizedBaseUrl
       : `${normalizedBaseUrl}/v1`;
 
-    // Generate models JSON for OpenCode config
+    const opencodeConfig = isOpenCode
+      ? JSON.stringify(
+          mergeOpenCodeConfig(
+            {},
+            {
+              baseUrl: baseUrlWithV1,
+              apiKey: keyToUse,
+              models: modelValues,
+            }
+          ),
+          null,
+          2
+        )
+      : "";
+
+    // Legacy placeholder kept for older snippets.
     const modelsJson =
       isOpenCode && modelValues.length > 0
         ? modelValues
@@ -99,6 +115,7 @@ export default function DefaultToolCard({
       apiKey: keyToUse,
       model: primaryModelValue || t("modelPlaceholder"),
       models: modelsJson,
+      opencodeConfig,
     };
   }, [selectedApiKey, cloudEnabled, baseUrl, primaryModelValue, modelValues, isOpenCode, t]);
 
@@ -181,12 +198,13 @@ export default function DefaultToolCard({
   const replaceVars = useCallback(
     (text) => {
       if (text == null || text === "") return text;
-      const { baseUrl, apiKey, model, models } = substitutionVars;
+      const { baseUrl, apiKey, model, models, opencodeConfig } = substitutionVars;
       return String(text)
         .replace(/\{\{baseUrl\}\}/g, baseUrl)
         .replace(/\{\{apiKey\}\}/g, apiKey)
         .replace(/\{\{model\}\}/g, model)
-        .replace(/\{\{models\}\}/g, models);
+        .replace(/\{\{models\}\}/g, models)
+        .replace(/\{\{opencodeConfig\}\}/g, opencodeConfig);
     },
     [substitutionVars]
   );

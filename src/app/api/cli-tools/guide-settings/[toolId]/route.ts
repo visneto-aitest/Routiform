@@ -50,7 +50,8 @@ export async function POST(request, { params }) {
       case "continue":
         return await saveContinueConfig({ baseUrl, apiKey, model });
       case "opencode":
-        // OpenCode reads opencode.json (see getOpenCodeConfigPath); merge provider.routiform + top-level model.
+        // OpenCode reads opencode.json (see getOpenCodeConfigPath); merge the managed
+        // Routiform OpenAI/Anthropic provider entries without touching unrelated providers.
         return await saveOpenCodeConfig({ baseUrl, apiKey, model, models });
       case "qwen":
         return await saveQwenConfig({ baseUrl, apiKey, model });

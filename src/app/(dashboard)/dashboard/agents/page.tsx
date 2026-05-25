@@ -7,6 +7,7 @@ import ProviderIcon from "@/shared/components/ProviderIcon";
 import { useTranslations } from "next-intl";
 import { AI_PROVIDERS } from "@/shared/constants/config";
 import { CLI_COMPAT_PROVIDER_IDS } from "@/shared/constants/cliCompatProviders";
+import { mergeOpenCodeConfig } from "@/shared/services/opencodeConfig";
 
 interface ProviderMeta {
   id?: string;
@@ -431,29 +432,30 @@ export default function AgentsPage() {
                     // Fetch available models
                     const modelsRes = await fetch("/v1/models");
                     const modelsData = modelsRes.ok ? await modelsRes.json() : { data: [] };
-                    const models: Record<string, { name: string }> = {};
+                    const modelIds: string[] = [];
+                    const modelContextLengths: Record<string, number> = {};
+                    const modelMaxOutputTokens: Record<string, number> = {};
                     for (const m of modelsData.data || []) {
-                      models[m.id] = { name: m.id };
+                      if (!m?.id) continue;
+                      modelIds.push(m.id);
+                      if (typeof m.context_length === "number" && m.context_length > 0) {
+                        modelContextLengths[m.id] = m.context_length;
+                      }
+                      if (typeof m.max_output_tokens === "number" && m.max_output_tokens > 0) {
+                        modelMaxOutputTokens[m.id] = m.max_output_tokens;
+                      }
                     }
-                    // Build opencode.json
                     const baseURL = window.location.origin + "/v1";
-                    const config = {
-                      $schema: "https://opencode.ai/config.json",
-                      provider: {
-                        routiform: {
-                          npm: "@ai-sdk/anthropic",
-                          name: "Routiform",
-                          options: {
-                            baseURL,
-                            apiKey: "YOUR_ROUTIFORM_API_KEY",
-                          },
-                          models:
-                            Object.keys(models).length > 0
-                              ? models
-                              : { "gpt-4o": { name: "gpt-4o" } },
-                        },
-                      },
-                    };
+                    const config = mergeOpenCodeConfig(
+                      {},
+                      {
+                        baseUrl: baseURL,
+                        apiKey: "YOUR_ROUTIFORM_API_KEY",
+                        models: modelIds,
+                        modelContextLengths,
+                        modelMaxOutputTokens,
+                      }
+                    );
                     // Download as file
                     const blob = new Blob([JSON.stringify(config, null, 2)], {
                       type: "application/json",

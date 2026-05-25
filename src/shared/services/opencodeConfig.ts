@@ -14,30 +14,121 @@ const normalizeValue = (value: unknown) =>
     .trim()
     .replace(/^\/+/, "");
 
-const OPENCODE_PROVIDER_KEY = "routiform";
+const OPENCODE_PROVIDER_KEYS = {
+  openai: "routiform-openai",
+  anthropic: "routiform-anthropic",
+} as const;
+const LEGACY_OPENCODE_PROVIDER_KEY = "routiform";
+const DEFAULT_OUTPUT_TOKENS = 16384;
+const DEFAULT_FALLBACK_MODEL = "gpt-4o";
+
+type OpenCodeProviderKind = keyof typeof OPENCODE_PROVIDER_KEYS;
+
+function isAnthropicModel(modelId: string) {
+  const normalized = normalizeValue(modelId).toLowerCase();
+  return normalized.startsWith("cc/") || normalized.includes("claude");
+}
+
+function getProviderKindForModel(modelId: string): OpenCodeProviderKind {
+  return isAnthropicModel(modelId) ? "anthropic" : "openai";
+}
+
+function getProviderKey(kind: OpenCodeProviderKind) {
+  return OPENCODE_PROVIDER_KEYS[kind];
+}
+
+function getProviderPackage(kind: OpenCodeProviderKind) {
+  return kind === "anthropic" ? "@ai-sdk/anthropic" : "@ai-sdk/openai";
+}
 
 /**
- * OpenCode expects `model` at the root of opencode.json, e.g. `routiform/alias/model-id`
- * (same prefix as the `provider` entry key). See OpenCode + @ai-sdk/anthropic docs.
+ * OpenCode expects `model` at the root of opencode.json, e.g.
+ * `routiform-openai/provider/model-id` or `routiform-anthropic/provider/model-id`.
  */
 export function toOpenCodeModelRef(model: string | undefined | null): string | undefined {
   const v = normalizeValue(model);
   if (!v) return undefined;
-  if (v.startsWith(`${OPENCODE_PROVIDER_KEY}/`)) return v;
-  return `${OPENCODE_PROVIDER_KEY}/${v}`;
+  if (v.startsWith(`${OPENCODE_PROVIDER_KEYS.openai}/`)) return v;
+  if (v.startsWith(`${OPENCODE_PROVIDER_KEYS.anthropic}/`)) return v;
+  return `${getProviderKey(getProviderKindForModel(v))}/${v}`;
 }
 
-// opencode requires limit.output when limit.context is set (validated since v1.14.50)
-const DEFAULT_OUTPUT_TOKENS = 16384;
+type OpenCodeModelConfig = {
+  name: string;
+  limit?: { context: number; output: number };
+  variants?: Record<string, Record<string, unknown>>;
+};
 
-export const buildOpenCodeProviderConfig = ({
+type OpenCodeProviderConfig = {
+  npm: string;
+  name: string;
+  options: {
+    baseURL: string;
+    apiKey: string;
+  };
+  models: Record<string, OpenCodeModelConfig>;
+};
+
+const OPENAI_REASONING_MODEL_RE = /(^|[/-])(gpt|o[1-9]|codex)([/-]|$)/;
+
+function isOpenAiReasoningModel(modelId: string) {
+  const normalized = normalizeValue(modelId).toLowerCase();
+  return normalized.startsWith("cx/") || OPENAI_REASONING_MODEL_RE.test(normalized);
+}
+
+function buildVariantsForModel(
+  modelId: string
+): Record<string, Record<string, unknown>> | undefined {
+  if (isAnthropicModel(modelId)) {
+    return {
+      high: {
+        thinking: {
+          type: "enabled",
+          budgetTokens: 16000,
+        },
+      },
+      max: {
+        thinking: {
+          type: "enabled",
+          budgetTokens: 31999,
+        },
+      },
+    };
+  }
+
+  if (isOpenAiReasoningModel(modelId)) {
+    return {
+      low: { reasoningEffort: "low" },
+      medium: { reasoningEffort: "medium" },
+      high: { reasoningEffort: "high" },
+      xhigh: { reasoningEffort: "xhigh" },
+    };
+  }
+}
+
+function buildModelConfig(
+  modelId: string,
+  modelContextLengths?: Record<string, number>,
+  modelMaxOutputTokens?: Record<string, number>
+): OpenCodeModelConfig {
+  const contextLength = modelContextLengths?.[modelId];
+  const maxOutput = modelMaxOutputTokens?.[modelId] || DEFAULT_OUTPUT_TOKENS;
+  const variants = buildVariantsForModel(modelId);
+  return {
+    name: modelId,
+    ...(contextLength ? { limit: { context: contextLength, output: maxOutput } } : {}),
+    ...(variants ? { variants } : {}),
+  };
+}
+
+export const buildOpenCodeProviderConfigs = ({
   baseUrl,
   apiKey,
   model,
   models,
   modelContextLengths,
   modelMaxOutputTokens,
-}: OpenCodeConfigInput): Record<string, unknown> => {
+}: OpenCodeConfigInput): Record<string, OpenCodeProviderConfig> => {
   const normalizedBaseUrl = String(baseUrl || "")
     .trim()
     .replace(/\/+$/, "");
@@ -46,34 +137,46 @@ export const buildOpenCodeProviderConfig = ({
     ? models.map((item) => normalizeValue(item)).filter(Boolean)
     : [];
 
-  const uniqueModels = [...new Set([normalizedModel, ...normalizedModels].filter(Boolean))];
+  const uniqueModels = [...new Set([normalizedModel, ...normalizedModels].filter(Boolean))].filter(
+    Boolean
+  );
 
-  const modelsRecord: Record<
-    string,
-    { name: string; limit?: { context: number; output: number } }
-  > = {};
-  for (const m of uniqueModels) {
-    if (m) {
-      const contextLength = modelContextLengths?.[m];
-      const maxOutput = modelMaxOutputTokens?.[m] || DEFAULT_OUTPUT_TOKENS;
-      modelsRecord[m] = {
-        name: m,
-        // Always include both context and output when context is available —
-        // opencode v1.14.50+ requires output when context is set.
-        ...(contextLength ? { limit: { context: contextLength, output: maxOutput } } : {}),
-      };
-    }
+  const groupedModels: Record<OpenCodeProviderKind, Record<string, OpenCodeModelConfig>> = {
+    openai: {},
+    anthropic: {},
+  };
+
+  if (uniqueModels.length === 0) {
+    groupedModels.openai[DEFAULT_FALLBACK_MODEL] = buildModelConfig(
+      DEFAULT_FALLBACK_MODEL,
+      modelContextLengths,
+      modelMaxOutputTokens
+    );
   }
 
-  return {
-    npm: "@ai-sdk/anthropic",
-    name: "Routiform",
-    options: {
-      baseURL: normalizedBaseUrl,
-      apiKey: apiKey || "sk_routiform",
-    },
-    models: modelsRecord,
-  };
+  for (const modelId of uniqueModels) {
+    groupedModels[getProviderKindForModel(modelId)][modelId] = buildModelConfig(
+      modelId,
+      modelContextLengths,
+      modelMaxOutputTokens
+    );
+  }
+
+  const providers: Record<string, OpenCodeProviderConfig> = {};
+  for (const kind of Object.keys(groupedModels) as OpenCodeProviderKind[]) {
+    if (Object.keys(groupedModels[kind]).length === 0) continue;
+    providers[getProviderKey(kind)] = {
+      npm: getProviderPackage(kind),
+      name: kind === "anthropic" ? "Routiform Anthropic" : "Routiform OpenAI",
+      options: {
+        baseURL: normalizedBaseUrl,
+        apiKey: apiKey || "sk_routiform",
+      },
+      models: groupedModels[kind],
+    };
+  }
+
+  return providers;
 };
 
 export const mergeOpenCodeConfig = (
@@ -85,13 +188,19 @@ export const mergeOpenCodeConfig = (
       ? existingConfig
       : {};
 
-  const providerEntry = buildOpenCodeProviderConfig(input);
+  const providerEntries = buildOpenCodeProviderConfigs(input);
+  const existingProviders = {
+    ...(((safeConfig as Record<string, unknown>).provider as Record<string, unknown>) || {}),
+  };
+  delete existingProviders[LEGACY_OPENCODE_PROVIDER_KEY];
+  delete existingProviders[OPENCODE_PROVIDER_KEYS.openai];
+  delete existingProviders[OPENCODE_PROVIDER_KEYS.anthropic];
 
   const next: Record<string, unknown> = {
     ...(safeConfig as Record<string, unknown>),
     provider: {
-      ...(((safeConfig as Record<string, unknown>).provider as Record<string, unknown>) || {}),
-      [OPENCODE_PROVIDER_KEY]: providerEntry,
+      ...existingProviders,
+      ...providerEntries,
     },
   };
 

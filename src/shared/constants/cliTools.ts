@@ -250,11 +250,11 @@ export const CLI_TOOLS = {
       },
       {
         type: "warning",
-        text: 'Thinking variant example: opencode run "implement this feature" --model routiform/claude-sonnet-4-5-thinking --variant high',
+        text: 'Thinking variant example: opencode run "implement this feature" --model routiform-anthropic/cc/claude-sonnet-4-5-thinking --variant high',
       },
       {
         type: "info",
-        text: "Uses @ai-sdk/anthropic npm package for better image/media support in tool results. This enables local image analysis via filesystem_read_media_file tool.",
+        text: "Uses split providers in opencode.json: @ai-sdk/openai for GPT/o-series and @ai-sdk/anthropic for Claude over the same Routiform proxy.",
       },
     ],
     guideSteps: [
@@ -265,27 +265,12 @@ export const CLI_TOOLS = {
       {
         step: 5,
         title: "Use Thinking Variant",
-        desc: "For thinking models, run with --variant high/low/max (example command below).",
+        desc: "For GPT reasoning models use --variant low/medium/high/xhigh. For Claude use --variant high/max.",
       },
     ],
     codeBlock: {
       language: "json",
-      code: `{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "routiform": {
-      "npm": "@ai-sdk/anthropic",
-      "name": "Routiform",
-      "options": {
-        "baseURL": "{{baseUrl}}",
-        "apiKey": "{{apiKey}}"
-      },
-      "models": {
-{{models}}
-      }
-    }
-  }
-}`,
+      code: `{{opencodeConfig}}`,
     },
   },
   kiro: {
